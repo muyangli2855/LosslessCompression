@@ -7,4 +7,4 @@ def extract_sample(input_file, output_file, num_chars):
         fout.write(content)
 
 # 提取前 5000 个字符
-extract_sample('austen.txt', 'test.txt', 50000)
+extract_sample('austen.txt', 'test.txt', 5000)
