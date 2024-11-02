@@ -2,7 +2,7 @@ import struct
 import time
 import os
 
-# 定义哈夫曼树节点类
+# Define Huffman tree node class
 class HuffmanNode:
     def __init__(self, char=None, freq=0):
         self.char = char
@@ -10,33 +10,33 @@ class HuffmanNode:
         self.left = None
         self.right = None
 
-# 为了排序，实现比较函数
+# Function for node comparison to enable sorting
 def node_comparison(node1, node2):
     return node1.freq < node2.freq
 
-# 构建哈夫曼树
+# Build the Huffman tree
 def build_huffman_tree(frequency):
     nodes = [HuffmanNode(char, freq) for char, freq in frequency.items()]
 
-    # 模拟优先队列
+    # Simulate a priority queue
     while len(nodes) > 1:
-        # 按照频率排序
+        # Sort nodes by frequency
         nodes.sort(key=lambda x: x.freq)
 
-        # 取出频率最小的两个节点并合并
+        # Remove the two nodes with the lowest frequency and merge them
         left = nodes.pop(0)
         right = nodes.pop(0)
         merged = HuffmanNode(freq=left.freq + right.freq)
         merged.left = left
         merged.right = right
 
-        # 将新节点放回列表
+        # Add the new merged node back to the list
         nodes.append(merged)
 
-    # 返回哈夫曼树的根节点
+    # Return the root node of the Huffman tree
     return nodes[0]
 
-# 生成编码表
+# Generate the encoding table
 def generate_codes(node, prefix="", codebook={}):
     if node is None:
         return
@@ -48,12 +48,12 @@ def generate_codes(node, prefix="", codebook={}):
         generate_codes(node.right, prefix + "1", codebook)
     return codebook
 
-# 压缩函数
+# Compression function
 def huffman_compress(input_file, compressed_file):
     with open(input_file, 'r') as fin:
         data = fin.read()
 
-    # 生成频率表
+    # Generate the frequency table
     frequency = {}
     for char in data:
         if char in frequency:
@@ -61,31 +61,31 @@ def huffman_compress(input_file, compressed_file):
         else:
             frequency[char] = 1
 
-    # 构建哈夫曼树和编码表
+    # Build Huffman tree and codebook
     huffman_tree = build_huffman_tree(frequency)
     codebook = generate_codes(huffman_tree)
 
-    # 编码数据
+    # Encode data
     encoded_data = ''.join([codebook[char] for char in data])
 
-    # 写入频率表和编码数据
+    # Write frequency table and encoded data
     with open(compressed_file, 'wb') as fout:
-        fout.write(struct.pack('>I', len(frequency)))  # 写入频率表长度
+        fout.write(struct.pack('>I', len(frequency)))  # Write frequency table length
         for char, freq in frequency.items():
-            fout.write(struct.pack('>cI', char.encode(), freq))  # 写入字符和频率
+            fout.write(struct.pack('>cI', char.encode(), freq))  # Write character and frequency
 
-        # 写入编码数据并填充字节
+        # Write encoded data and add padding bits
         padding_length = 8 - len(encoded_data) % 8
         encoded_data += '0' * padding_length
-        fout.write(struct.pack('B', padding_length))  # 写入填充长度
+        fout.write(struct.pack('B', padding_length))  # Write padding length
         for i in range(0, len(encoded_data), 8):
             byte = encoded_data[i:i+8]
             fout.write(struct.pack('B', int(byte, 2)))
 
-# 解压缩函数
+# Decompression function
 def huffman_decompress(compressed_file, output_file):
     with open(compressed_file, 'rb') as fin:
-        # 读取频率表
+        # Read the frequency table
         frequency_length = struct.unpack('>I', fin.read(4))[0]
         frequency = {}
         for _ in range(frequency_length):
@@ -93,21 +93,21 @@ def huffman_decompress(compressed_file, output_file):
             freq = struct.unpack('>I', fin.read(4))[0]
             frequency[char] = freq
 
-        # 重建哈夫曼树
+        # Rebuild the Huffman tree
         huffman_tree = build_huffman_tree(frequency)
 
-        # 读取填充长度
+        # Read the padding length
         padding_length = struct.unpack('B', fin.read(1))[0]
 
-        # 读取编码数据并转为二进制字符串
+        # Read encoded data and convert it to a binary string
         encoded_data = ''
         while (byte := fin.read(1)):
             encoded_data += f"{bin(byte[0])[2:]:>08}"
 
-        # 移除填充的0
+        # Remove the padding bits
         encoded_data = encoded_data[:-padding_length]
 
-        # 解码数据
+        # Decode data
         decoded_data = []
         current_node = huffman_tree
         for bit in encoded_data:
@@ -120,7 +120,7 @@ def huffman_decompress(compressed_file, output_file):
                 decoded_data.append(current_node.char)
                 current_node = huffman_tree
 
-        # 写入解码后的数据
+        # Write the decoded data to the output file
         with open(output_file, 'w') as fout:
             fout.write(''.join(decoded_data))
 
@@ -130,16 +130,15 @@ def compression_ratio(input_file, compressed_file):
     compressed_size = os.path.getsize(compressed_file)
     return compressed_size / input_size
 
-
 # Verify if two files are identical
 def files_are_equal(file1, file2):
     with open(file1, 'r') as f1, open(file2, 'r') as f2:
         return f1.read() == f2.read()
 
-# 主函数
+# Main function
 if __name__ == "__main__":
     input_file = '../test.txt'
-    compressed_file = 'compressed.huff'
+    compressed_file = 'compressed'
     output_file = 'out.txt'
 
     # Compression
